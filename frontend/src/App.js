@@ -1,24 +1,106 @@
-import logo from './logo.svg';
-import './App.css';
+// frontend/src/App.js
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import Login from "./components/Login";
+import Register from "./components/Register";
+import Profile from "./components/Profile";
+import Exams from "./components/Exams";
+import LeaveRequest from "./components/LeaveRequest"; // Import LeaveRequest component
+import LeaveStatus from "./components/LeaveStatus";
+import Admin from "./components/Admin";
+import UsersManagement from "./components/admin/UsersManagement";
+import ExamsManagement from "./components/admin/ExamsManagement";
+import LeaveRequestsManagement from "./components/admin/LeaveRequestsManagement";
+
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    return <Navigate to="/login" />;
+  }
+  return children;
+};
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/exams"
+            element={
+              <ProtectedRoute>
+                <Exams />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leaveRequest"
+            element={
+              <ProtectedRoute>
+                <LeaveRequest />
+              </ProtectedRoute>
+            }
+          />{" "}
+          {/* New leave request route */}
+          <Route
+            path="/leaveStatus"
+            element={
+              <ProtectedRoute>
+                <LeaveStatus />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <Admin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute>
+                <UsersManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/exams"
+            element={
+              <ProtectedRoute>
+                <ExamsManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/leaves"
+            element={
+              <ProtectedRoute>
+                <LeaveRequestsManagement />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
