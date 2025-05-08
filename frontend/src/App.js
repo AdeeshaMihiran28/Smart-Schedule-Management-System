@@ -9,7 +9,7 @@ import {
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Profile from "./components/Profile";
-import Exams from "./components/Exams";
+import Exam from "./components/Exam";
 import LeaveRequest from "./components/LeaveRequest"; // Import LeaveRequest component
 import LeaveStatus from "./components/LeaveStatus";
 import Admin from "./components/Admin";
@@ -45,7 +45,7 @@ function App() {
             path="/exams"
             element={
               <ProtectedRoute>
-                <Exams />
+                <Exam />
               </ProtectedRoute>
             }
           />
