@@ -52,16 +52,20 @@ const Admin = () => {
   const fetchRescheduleRequests = async () => {
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No token found");
+        return;
+      }
+
+      console.log("Fetching reschedule requests...");
+
       const [examsResponse, assessmentsResponse] = await Promise.all([
-        axios.get("http://localhost:2021/api/admin/exams/reschedule-requests", {
+        axios.get("http://localhost:2021/api/exams/reschedule-requests", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get(
-          "http://localhost:2021/api/admin/assessments/reschedule-requests",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        ),
+        axios.get("http://localhost:2021/api/assessments/reschedule-requests", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       console.log("Exams response:", examsResponse.data);
@@ -82,12 +86,13 @@ const Admin = () => {
         })),
       ];
 
-      console.log("All requests:", allRequests);
+      console.log("Combined requests:", allRequests);
       setRescheduleRequests(allRequests);
     } catch (error) {
       console.error("Error fetching reschedule requests:", error);
       if (error.response) {
-        console.error("Error response:", error.response.data);
+        console.error("Error response data:", error.response.data);
+        console.error("Error response status:", error.response.status);
       }
     }
   };
