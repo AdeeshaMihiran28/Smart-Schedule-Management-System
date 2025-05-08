@@ -9,10 +9,12 @@ const leaveRequestRoutes = require("./routes/leaveRequestRoutes");
 const app = express();
 
 // Middleware
-app.use(cors({
-  credentials: true,
-  origin: "*",
-}));
+app.use(
+  cors({
+    credentials: true,
+    origin: "*",
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 

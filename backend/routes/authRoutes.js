@@ -15,7 +15,9 @@ router.get("/users", authMiddleware, async (req, res) => {
     const users = await User.find().select("-password");
     res.json(users);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching users", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error fetching users", error: error.message });
   }
 });
 
@@ -28,7 +30,9 @@ router.delete("/users/:id", authMiddleware, async (req, res) => {
     }
     res.json({ message: "User deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting user", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error deleting user", error: error.message });
   }
 });
 
@@ -41,7 +45,9 @@ router.get("/profile", authMiddleware, async (req, res) => {
     }
     res.json(user);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching profile", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error fetching profile", error: error.message });
   }
 });
 
@@ -61,15 +67,17 @@ router.put("/profile", authMiddleware, async (req, res) => {
     if (profileImage !== undefined) user.profileImage = profileImage;
 
     await user.save();
-    
+
     // Return updated user without password
     const updatedUser = await User.findById(user._id).select("-password");
-    res.json({ 
+    res.json({
       message: "Profile updated successfully",
-      user: updatedUser 
+      user: updatedUser,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error updating profile", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error updating profile", error: error.message });
   }
 });
 
