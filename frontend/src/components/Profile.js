@@ -54,6 +54,9 @@ const Profile = () => {
     type: "Quiz",
   });
   const [editingAssessment, setEditingAssessment] = useState(null);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [selectedExam, setSelectedExam] = useState(null);
+  const [newDateTime, setNewDateTime] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -671,6 +674,115 @@ const Profile = () => {
     }
   };
 
+  const handleRescheduleClick = (item) => {
+    setSelectedExam(item);
+    setNewDateTime(item.dateTime || `${item.date}T${item.startTime}`);
+    setShowRescheduleModal(true);
+  };
+
+  const handleRescheduleSubmit = async () => {
+    try {
+      if (!newDateTime) {
+        Swal.fire({
+          title: "Error!",
+          text: "Please select a new date and time",
+          icon: "error",
+          confirmButtonColor: "#ef4444",
+        });
+        return;
+      }
+
+      const selectedDateTime = new Date(newDateTime);
+      const currentDateTime = new Date();
+
+      if (selectedDateTime < currentDateTime) {
+        Swal.fire({
+          title: "Invalid Date/Time",
+          text: "Cannot schedule in the past",
+          icon: "error",
+          confirmButtonColor: "#ef4444",
+        });
+        return;
+      }
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        Swal.fire({
+          title: "Authentication Error",
+          text: "Please log in again",
+          icon: "error",
+          confirmButtonColor: "#ef4444",
+        });
+        return;
+      }
+
+      // Format the date and time for the API
+      const newDate = selectedDateTime.toISOString().split("T")[0];
+      const newTime = selectedDateTime.toTimeString().split(" ")[0];
+
+      // Determine if it's an exam or assessment
+      const isAssessment =
+        selectedExam.type === "Quiz" ||
+        selectedExam.type === "Assignment" ||
+        selectedExam.type === "Project";
+
+      const endpoint = isAssessment
+        ? "http://localhost:2021/api/assessments/reschedule" // Updated to match backend route
+        : "http://localhost:2021/api/exams/reschedule"; // Updated to match backend route
+
+      const requestData = {
+        id: selectedExam._id,
+        date: newDate,
+        time: newTime,
+      };
+
+      console.log("Sending reschedule request to:", endpoint);
+      console.log("Request data:", requestData);
+
+      const response = await axios.post(endpoint, requestData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("Response from server:", response.data);
+
+      if (response.data) {
+        Swal.fire({
+          title: "Success!",
+          text: "Reschedule request submitted successfully",
+          icon: "success",
+          confirmButtonColor: "#10b981",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+
+        setShowRescheduleModal(false);
+        setSelectedExam(null);
+        setNewDateTime("");
+        fetchScheduleData(); // Refresh the list
+      }
+    } catch (error) {
+      console.error("Error submitting reschedule request:", error);
+      console.error("Error response:", error.response);
+
+      let errorMessage = "Failed to submit reschedule request";
+
+      if (error.response) {
+        errorMessage = error.response.data.message || errorMessage;
+        console.error("Server error message:", error.response.data);
+      }
+
+      Swal.fire({
+        title: "Error!",
+        text: errorMessage,
+        icon: "error",
+        confirmButtonColor: "#ef4444",
+      });
+    }
+  };
+
   return (
     <div className="profile-container">
       <div className="profile-header">
@@ -970,6 +1082,30 @@ const Profile = () => {
                 <div className="schedule-item-header">
                   <h3 className="schedule-item-title">{exam.title}</h3>
                   <div className="schedule-item-actions">
+                    {exam.rescheduleRequest && (
+                      <span className="reschedule-status pending">
+                        Reschedule Pending
+                      </span>
+                    )}
+                    <button
+                      className="action-button delete-button"
+                      onClick={() => handleDeleteExam(exam._id)}
+                      title="Delete Exam"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
                     <button
                       className="action-button download-button"
                       onClick={() => handleDownloadExam(exam)}
@@ -1009,9 +1145,9 @@ const Profile = () => {
                       </svg>
                     </button>
                     <button
-                      className="action-button delete-button"
-                      onClick={() => handleDeleteExam(exam._id)}
-                      title="Delete Exam"
+                      className="action-button reschedule-button"
+                      onClick={() => handleRescheduleClick(exam)}
+                      title="Request Reschedule"
                     >
                       <svg
                         className="w-5 h-5"
@@ -1023,7 +1159,7 @@ const Profile = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
                     </button>
@@ -1136,6 +1272,30 @@ const Profile = () => {
                 <div className="schedule-item-header">
                   <h3 className="schedule-item-title">{assessment.title}</h3>
                   <div className="schedule-item-actions">
+                    {assessment.rescheduleRequest && (
+                      <span className="reschedule-status pending">
+                        Reschedule Pending
+                      </span>
+                    )}
+                    <button
+                      className="action-button delete-button"
+                      onClick={() => handleDeleteAssessment(assessment._id)}
+                      title="Delete Assessment"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
                     <button
                       className="action-button download-button"
                       onClick={() => handleDownloadAssessment(assessment)}
@@ -1175,9 +1335,9 @@ const Profile = () => {
                       </svg>
                     </button>
                     <button
-                      className="action-button delete-button"
-                      onClick={() => handleDeleteAssessment(assessment._id)}
-                      title="Delete Assessment"
+                      className="action-button reschedule-button"
+                      onClick={() => handleRescheduleClick(assessment)}
+                      title="Request Reschedule"
                     >
                       <svg
                         className="w-5 h-5"
@@ -1189,7 +1349,7 @@ const Profile = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
                     </button>
@@ -1213,21 +1373,9 @@ const Profile = () => {
                     {formatDate(assessment.date)} |{" "}
                     {formatTime(assessment.startTime)}
                   </div>
-                  <div className="schedule-item-location">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    Duration: {assessment.duration} | Type: {assessment.type}
+                  <div className="schedule-item-details">
+                    <span>Duration: {assessment.duration}</span>
+                    <span>Type: {assessment.type}</span>
                   </div>
                 </div>
               </li>
@@ -1609,6 +1757,65 @@ const Profile = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showRescheduleModal && selectedExam && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <button
+              className="modal-close"
+              onClick={() => {
+                setShowRescheduleModal(false);
+                setSelectedExam(null);
+                setNewDateTime("");
+              }}
+            >
+              ×
+            </button>
+            <h2 className="modal-title">Request Reschedule</h2>
+            <div className="current-schedule">
+              <h3>Current Schedule</h3>
+              <p>Date: {formatDate(selectedExam.date)}</p>
+              <p>Time: {formatTime(selectedExam.startTime)}</p>
+              {selectedExam.endTime && (
+                <p>End Time: {formatTime(selectedExam.endTime)}</p>
+              )}
+              {selectedExam.location && (
+                <p>Location: {selectedExam.location}</p>
+              )}
+            </div>
+            <div className="form-group">
+              <label className="form-label">New Date and Time</label>
+              <input
+                type="datetime-local"
+                className="form-input"
+                value={newDateTime}
+                onChange={(e) => setNewDateTime(e.target.value)}
+                required
+              />
+            </div>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="cancel-button"
+                onClick={() => {
+                  setShowRescheduleModal(false);
+                  setSelectedExam(null);
+                  setNewDateTime("");
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="save-button"
+                onClick={handleRescheduleSubmit}
+              >
+                Submit Request
+              </button>
+            </div>
           </div>
         </div>
       )}

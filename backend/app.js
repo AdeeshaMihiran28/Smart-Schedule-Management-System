@@ -24,4 +24,8 @@ app.use("/api/exams", examRoutes);
 app.use("/api/assessments", assessmentRoutes);
 app.use("/api/leaves", leaveRequestRoutes);
 
+// Admin routes
+app.use("/api/admin/exams", examRoutes);
+app.use("/api/admin/assessments", assessmentRoutes);
+
 module.exports = app;

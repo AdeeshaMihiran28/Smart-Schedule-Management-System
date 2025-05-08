@@ -11,6 +11,7 @@ const Admin = () => {
     totalLeaveRequests: 0,
     pendingLeaveRequests: 0,
   });
+  const [rescheduleRequests, setRescheduleRequests] = useState([]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -45,7 +46,89 @@ const Admin = () => {
     };
 
     fetchAdminData();
+    fetchRescheduleRequests();
   }, [navigate]);
+
+  const fetchRescheduleRequests = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const [examsResponse, assessmentsResponse] = await Promise.all([
+        axios.get("http://localhost:2021/api/admin/exams/reschedule-requests", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(
+          "http://localhost:2021/api/admin/assessments/reschedule-requests",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        ),
+      ]);
+
+      console.log("Exams response:", examsResponse.data);
+      console.log("Assessments response:", assessmentsResponse.data);
+
+      const allRequests = [
+        ...examsResponse.data.map((exam) => ({
+          ...exam,
+          type: "exam",
+          requestedDate: exam.requestedDate || exam.date,
+          requestedTime: exam.requestedTime || exam.startTime,
+        })),
+        ...assessmentsResponse.data.map((assessment) => ({
+          ...assessment,
+          type: "assessment",
+          requestedDate: assessment.requestedDate || assessment.date,
+          requestedTime: assessment.requestedTime || assessment.startTime,
+        })),
+      ];
+
+      console.log("All requests:", allRequests);
+      setRescheduleRequests(allRequests);
+    } catch (error) {
+      console.error("Error fetching reschedule requests:", error);
+      if (error.response) {
+        console.error("Error response:", error.response.data);
+      }
+    }
+  };
+
+  const handleRescheduleAction = async (requestId, action, type) => {
+    try {
+      const token = localStorage.getItem("token");
+      const endpoint =
+        type === "exam"
+          ? `http://localhost:2021/api/admin/exams/${requestId}/reschedule`
+          : `http://localhost:2021/api/admin/assessments/${requestId}/reschedule`;
+
+      await axios.post(
+        endpoint,
+        { action },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // Refresh the requests list
+      fetchRescheduleRequests();
+    } catch (error) {
+      console.error("Error handling reschedule action:", error);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const formatTime = (timeString) => {
+    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   return (
     <div className="admin-container">
@@ -235,6 +318,76 @@ const Admin = () => {
           </svg>
           Manage Leave Requests
         </button>
+      </div>
+
+      {/* Reschedule Requests Section */}
+      <div className="reschedule-requests-section">
+        <h2>Reschedule Requests</h2>
+        <div className="requests-list">
+          {rescheduleRequests.length === 0 ? (
+            <p className="no-requests">No pending reschedule requests</p>
+          ) : (
+            rescheduleRequests.map((request) => (
+              <div key={request._id} className="request-card">
+                <div className="request-header">
+                  <h3>{request.title}</h3>
+                  <span className={`request-type ${request.type}`}>
+                    {request.type === "exam" ? "Exam" : "Assessment"}
+                  </span>
+                </div>
+                <div className="request-details">
+                  <p>
+                    <strong>Subject:</strong> {request.subject}
+                  </p>
+                  <p>
+                    <strong>Class:</strong> {request.class}
+                  </p>
+                  <p>
+                    <strong>Current Schedule:</strong>{" "}
+                    {formatDate(request.date)} at{" "}
+                    {formatTime(request.startTime)}
+                  </p>
+                  <p>
+                    <strong>Requested Schedule:</strong>{" "}
+                    {formatDate(request.requestedDate)} at{" "}
+                    {formatTime(request.requestedTime)}
+                  </p>
+                  {request.location && (
+                    <p>
+                      <strong>Location:</strong> {request.location}
+                    </p>
+                  )}
+                </div>
+                <div className="request-actions">
+                  <button
+                    className="accept-button"
+                    onClick={() =>
+                      handleRescheduleAction(
+                        request._id,
+                        "accept",
+                        request.type
+                      )
+                    }
+                  >
+                    Accept
+                  </button>
+                  <button
+                    className="decline-button"
+                    onClick={() =>
+                      handleRescheduleAction(
+                        request._id,
+                        "decline",
+                        request.type
+                      )
+                    }
+                  >
+                    Decline
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

@@ -353,3 +353,123 @@
   border-radius: 0.5rem;
   margin: 1rem 0;
 }
+
+.reschedule-requests-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.reschedule-requests-section h2 {
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.requests-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.no-requests {
+  text-align: center;
+  color: #6b7280;
+  padding: 2rem;
+  background-color: #f9fafb;
+  border-radius: 0.375rem;
+}
+
+.request-card {
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.request-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.request-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.request-header h3 {
+  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.request-type {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.request-type.exam {
+  background-color: #e0e7ff;
+  color: #4f46e5;
+}
+
+.request-type.assessment {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.request-details {
+  margin-bottom: 1.5rem;
+}
+
+.request-details p {
+  margin: 0.5rem 0;
+  color: #4b5563;
+}
+
+.request-details strong {
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.request-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.accept-button,
+.decline-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.accept-button {
+  background-color: #10b981;
+  color: white;
+  border: none;
+}
+
+.accept-button:hover {
+  background-color: #059669;
+}
+
+.decline-button {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+}
+
+.decline-button:hover {
+  background-color: #dc2626;
+}
