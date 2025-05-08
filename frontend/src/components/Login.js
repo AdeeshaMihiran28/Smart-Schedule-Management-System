@@ -22,8 +22,17 @@ const Login = () => {
         }
       );
 
+      // Store the token
       localStorage.setItem("token", response.data.token);
-      navigate("/profile");
+
+      // Check if the user is admin
+      if (email === "admin@gmail.com") {
+        localStorage.setItem("isAdmin", "true");
+        navigate("/admin");
+      } else {
+        localStorage.setItem("isAdmin", "false");
+        navigate("/profile");
+      }
     } catch (error) {
       setError(
         error.response?.data?.message || "An error occurred during login"

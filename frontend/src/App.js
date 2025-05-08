@@ -25,6 +25,16 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+const AdminRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
+  const isAdmin = localStorage.getItem("isAdmin") === "true";
+
+  if (!token || !isAdmin) {
+    return <Navigate to="/login" />;
+  }
+  return children;
+};
+
 function App() {
   return (
     <Router>
@@ -69,33 +79,33 @@ function App() {
           <Route
             path="/admin"
             element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <Admin />
-              </ProtectedRoute>
+              </AdminRoute>
             }
           />
           <Route
             path="/admin/users"
             element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <UsersManagement />
-              </ProtectedRoute>
+              </AdminRoute>
             }
           />
           <Route
             path="/admin/exams"
             element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <ExamsManagement />
-              </ProtectedRoute>
+              </AdminRoute>
             }
           />
           <Route
             path="/admin/leaves"
             element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <LeaveRequestsManagement />
-              </ProtectedRoute>
+              </AdminRoute>
             }
           />
         </Routes>

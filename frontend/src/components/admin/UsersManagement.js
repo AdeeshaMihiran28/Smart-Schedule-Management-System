@@ -6,22 +6,31 @@ import "../../styles/admin.css";
 
 const UsersManagement = () => {
   const [users, setUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check if user is admin
+    const isAdmin = localStorage.getItem("isAdmin");
+    if (!isAdmin || isAdmin !== "true") {
+      navigate("/login");
+      return;
+    }
     fetchUsers();
-  }, []);
+  }, [navigate]);
 
   const fetchUsers = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const token = localStorage.getItem("token");
+
       if (!token) {
-        console.log("No token found, redirecting to login");
         navigate("/login");
         return;
       }
-
-      console.log("Fetching users with token:", token.substring(0, 10) + "...");
 
       const response = await axios.get("http://localhost:2021/api/auth/users", {
         headers: {
@@ -30,63 +39,22 @@ const UsersManagement = () => {
         },
       });
 
-      console.log("Response received:", response.data);
-
       if (response.data && Array.isArray(response.data)) {
         setUsers(response.data);
       } else {
-        console.error("Invalid response format:", response.data);
-        Swal.fire({
-          title: "Error",
-          text: "Invalid data format received from server",
-          icon: "error",
-          confirmButtonColor: "#dc2626",
-        });
+        setError("Invalid data format received from server");
       }
     } catch (error) {
-      console.error("Full error object:", error);
-      console.error("Error response:", error.response);
-      console.error("Error message:", error.message);
-
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error("Error status:", error.response.status);
-        console.error("Error data:", error.response.data);
-
-        if (error.response.status === 401) {
-          console.log("Unauthorized access, redirecting to login");
-          localStorage.removeItem("token");
-          navigate("/login");
-        } else {
-          Swal.fire({
-            title: "Error",
-            text:
-              error.response.data?.message ||
-              `Server error: ${error.response.status}`,
-            icon: "error",
-            confirmButtonColor: "#dc2626",
-          });
-        }
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error("No response received from server");
-        Swal.fire({
-          title: "Connection Error",
-          text: "Unable to connect to the server. Please check if the server is running.",
-          icon: "error",
-          confirmButtonColor: "#dc2626",
-        });
+      console.error("Error fetching users:", error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("isAdmin");
+        navigate("/login");
       } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error("Request setup error:", error.message);
-        Swal.fire({
-          title: "Error",
-          text: "Failed to make the request. Please try again.",
-          icon: "error",
-          confirmButtonColor: "#dc2626",
-        });
+        setError(error.response?.data?.message || "Failed to fetch users");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,18 +65,13 @@ const UsersManagement = () => {
         text: "You won't be able to revert this!",
         icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: "#dc2626",
+        confirmButtonColor: "#ef4444",
         cancelButtonColor: "#6b7280",
-        confirmButtonText: "Yes, delete it!",
+        confirmButtonText: "Yes, delete user",
       });
 
       if (result.isConfirmed) {
         const token = localStorage.getItem("token");
-        if (!token) {
-          navigate("/login");
-          return;
-        }
-
         await axios.delete(`http://localhost:2021/api/auth/users/${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -123,18 +86,30 @@ const UsersManagement = () => {
           confirmButtonColor: "#10b981",
         });
 
-        fetchUsers();
+        fetchUsers(); // Refresh the user list
       }
     } catch (error) {
       console.error("Error deleting user:", error);
-      Swal.fire({
-        title: "Error!",
-        text: error.response?.data?.message || "Failed to delete user.",
-        icon: "error",
-        confirmButtonColor: "#dc2626",
-      });
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("isAdmin");
+        navigate("/login");
+      } else {
+        Swal.fire({
+          title: "Error!",
+          text: error.response?.data?.message || "Failed to delete user.",
+          icon: "error",
+          confirmButtonColor: "#ef4444",
+        });
+      }
     }
   };
+
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="admin-container">
@@ -158,47 +133,83 @@ const UsersManagement = () => {
         </button>
       </div>
 
+      <div className="search-container">
+        <div className="search-input-wrapper">
+          <svg
+            className="search-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search users by name or email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
       <div className="table-container">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user._id}>
-                <td>{user.name}</td>
-                <td>{user.email}</td>
-                <td>{user.role}</td>
-                <td>
-                  <button
-                    className="delete-button"
-                    onClick={() => handleDeleteUser(user._id)}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                    Delete
-                  </button>
-                </td>
+        {loading ? (
+          <div className="loading-spinner">Loading users...</div>
+        ) : error ? (
+          <div className="error-message">{error}</div>
+        ) : filteredUsers.length === 0 ? (
+          <div className="no-users-message">No users found</div>
+        ) : (
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredUsers.map((user) => (
+                <tr key={user._id}>
+                  <td>{user.name}</td>
+                  <td>{user.email}</td>
+                  <td>{user.role || "user"}</td>
+                  <td>
+                    <div className="action-buttons">
+                      <button
+                        className="delete-button"
+                        onClick={() => handleDeleteUser(user._id)}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
