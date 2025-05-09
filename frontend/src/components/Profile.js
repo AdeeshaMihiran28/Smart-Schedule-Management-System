@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../styles/profile.css";
+import "../styles/examForms.css";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -177,42 +178,57 @@ const Profile = () => {
 
   const handleExamSubmit = async (e) => {
     e.preventDefault();
+
+    // Only allow letters and spaces (no numbers or special characters)
+    const titleRegex = /^[A-Za-z\s]+$/;
+    if (!newExam.title.trim()) {
+      return Swal.fire("Validation Error", "Title is required.", "warning");
+    }
+    if (!titleRegex.test(newExam.title.trim())) {
+      return Swal.fire(
+        "Validation Error",
+        "Title can only contain letters and spaces (no numbers or special characters).",
+        "warning"
+      );
+    }
+    if (!newExam.subject.trim()) {
+      return Swal.fire("Validation Error", "Subject is required.", "warning");
+    }
+    if (!newExam.class.trim()) {
+      return Swal.fire("Validation Error", "Class is required.", "warning");
+    }
+    if (!newExam.date) {
+      return Swal.fire("Validation Error", "Date is required.", "warning");
+    }
+    if (new Date(newExam.date) < new Date(new Date().toDateString())) {
+      return Swal.fire(
+        "Validation Error",
+        "Date cannot be in the past.",
+        "warning"
+      );
+    }
+    if (!newExam.startTime) {
+      return Swal.fire(
+        "Validation Error",
+        "Start time is required.",
+        "warning"
+      );
+    }
+    if (!newExam.endTime) {
+      return Swal.fire("Validation Error", "End time is required.", "warning");
+    }
+    if (newExam.endTime <= newExam.startTime) {
+      return Swal.fire(
+        "Validation Error",
+        "End time must be after start time.",
+        "warning"
+      );
+    }
+    if (!newExam.location.trim()) {
+      return Swal.fire("Validation Error", "Location is required.", "warning");
+    }
+
     try {
-      // Validate required fields
-      if (
-        !newExam.title ||
-        !newExam.subject ||
-        !newExam.class ||
-        !newExam.date ||
-        !newExam.startTime ||
-        !newExam.endTime ||
-        !newExam.location
-      ) {
-        Swal.fire({
-          title: "Validation Error!",
-          text: "Please fill in all required fields",
-          icon: "warning",
-          confirmButtonColor: "#10b981",
-          confirmButtonText: "OK",
-        });
-        return;
-      }
-
-      // Validate time format
-      const startTime = new Date(`2000-01-01T${newExam.startTime}`);
-      const endTime = new Date(`2000-01-01T${newExam.endTime}`);
-
-      if (endTime <= startTime) {
-        Swal.fire({
-          title: "Time Error!",
-          text: "End time must be after start time",
-          icon: "warning",
-          confirmButtonColor: "#10b981",
-          confirmButtonText: "OK",
-        });
-        return;
-      }
-
       const token = localStorage.getItem("token");
       if (!token) {
         Swal.fire({
@@ -434,27 +450,58 @@ const Profile = () => {
 
   const handleAssessmentSubmit = async (e) => {
     e.preventDefault();
-    try {
-      // Validate required fields
-      if (
-        !newAssessment.title ||
-        !newAssessment.subject ||
-        !newAssessment.class ||
-        !newAssessment.date ||
-        !newAssessment.startTime ||
-        !newAssessment.duration ||
-        !newAssessment.type
-      ) {
-        Swal.fire({
-          title: "Validation Error!",
-          text: "Please fill in all required fields",
-          icon: "warning",
-          confirmButtonColor: "#10b981",
-          confirmButtonText: "OK",
-        });
-        return;
-      }
 
+    // Only allow letters and spaces (no numbers or special characters)
+    const titleRegex = /^[A-Za-z\s]+$/;
+    if (!newAssessment.title.trim()) {
+      return Swal.fire("Validation Error", "Title is required.", "warning");
+    }
+    if (!titleRegex.test(newAssessment.title.trim())) {
+      return Swal.fire(
+        "Validation Error",
+        "Title can only contain letters and spaces (no numbers or special characters).",
+        "warning"
+      );
+    }
+    if (!newAssessment.subject.trim()) {
+      return Swal.fire("Validation Error", "Subject is required.", "warning");
+    }
+    if (!newAssessment.class.trim()) {
+      return Swal.fire("Validation Error", "Class is required.", "warning");
+    }
+    if (!newAssessment.date) {
+      return Swal.fire("Validation Error", "Date is required.", "warning");
+    }
+    if (new Date(newAssessment.date) < new Date(new Date().toDateString())) {
+      return Swal.fire(
+        "Validation Error",
+        "Date cannot be in the past.",
+        "warning"
+      );
+    }
+    if (!newAssessment.startTime) {
+      return Swal.fire(
+        "Validation Error",
+        "Start time is required.",
+        "warning"
+      );
+    }
+    if (
+      !newAssessment.duration.trim() ||
+      isNaN(Number(newAssessment.duration)) ||
+      Number(newAssessment.duration) <= 0
+    ) {
+      return Swal.fire(
+        "Validation Error",
+        "Duration must be a positive number.",
+        "warning"
+      );
+    }
+    if (!newAssessment.type) {
+      return Swal.fire("Validation Error", "Type is required.", "warning");
+    }
+
+    try {
       const token = localStorage.getItem("token");
       if (!token) {
         Swal.fire({

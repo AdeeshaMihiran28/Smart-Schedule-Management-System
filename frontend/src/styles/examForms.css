@@ -334,3 +334,50 @@
     padding: 1.5rem;
   }
 }
+
+.exam-form .form-group {
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+  background: #fff;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.06);
+  padding: 1.25rem 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.exam-form .form-group label {
+  color: #10b981;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.exam-form input,
+.exam-form select,
+.exam-form textarea {
+  max-width: 100%;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #f9fafb;
+  color: #065f46;
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.04);
+}
+
+.exam-form input:focus,
+.exam-form select:focus,
+.exam-form textarea:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+  background: #fff;
+  outline: none;
+}
+
+.exam-form input:hover,
+.exam-form select:hover,
+.exam-form textarea:hover {
+  border-color: #10b981;
+}
