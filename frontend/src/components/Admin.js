@@ -21,7 +21,9 @@ const Admin = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
+    const isAdmin = localStorage.getItem("isAdmin");
+
+    if (!token || isAdmin !== "true") {
       navigate("/login");
       return;
     }
@@ -40,7 +42,10 @@ const Admin = () => {
         console.error("Error fetching admin data:", error);
         if (error.response?.status === 401) {
           localStorage.removeItem("token");
+          localStorage.removeItem("isAdmin");
           navigate("/login");
+        } else {
+          alert("An error occurred while fetching data.");
         }
       }
     };
@@ -93,6 +98,8 @@ const Admin = () => {
       if (error.response) {
         console.error("Error response data:", error.response.data);
         console.error("Error response status:", error.response.status);
+      } else {
+        alert("An error occurred while fetching reschedule requests.");
       }
     }
   };
@@ -117,6 +124,11 @@ const Admin = () => {
       fetchRescheduleRequests();
     } catch (error) {
       console.error("Error handling reschedule action:", error);
+      if (error.response) {
+        console.error("Error response data:", error.response.data);
+      } else {
+        alert("An error occurred while processing the reschedule action.");
+      }
     }
   };
 

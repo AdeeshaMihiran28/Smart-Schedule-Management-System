@@ -5,6 +5,24 @@ const adminMiddleware = require("../middlewares/adminMiddleware");
 
 const router = express.Router();
 
+// Get all reschedule requests (admin only)
+router.get(
+  "/reschedule-requests",
+  authMiddleware,
+  adminMiddleware,
+  async (req, res) => {
+    try {
+      const assessments = await Assessment.find({ rescheduleRequest: true })
+        .populate("user", "name email")
+        .sort({ date: 1 });
+      res.status(200).json(assessments);
+    } catch (error) {
+      console.error("Error fetching reschedule requests:", error);
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
+  }
+);
+
 // Create a new Assessment
 router.post("/add", authMiddleware, async (req, res) => {
   try {
@@ -146,24 +164,6 @@ router.post("/reschedule", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
-
-// Get all reschedule requests (admin only)
-router.get(
-  "/reschedule-requests",
-  authMiddleware,
-  adminMiddleware,
-  async (req, res) => {
-    try {
-      const assessments = await Assessment.find({ rescheduleRequest: true })
-        .populate("user", "name email")
-        .sort({ date: 1 });
-      res.status(200).json(assessments);
-    } catch (error) {
-      console.error("Error fetching reschedule requests:", error);
-      res.status(500).json({ message: "Server error", error: error.message });
-    }
-  }
-);
 
 // Handle reschedule request (admin only)
 router.post(
